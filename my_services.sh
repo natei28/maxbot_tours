@@ -166,7 +166,7 @@ fi
 # Шаг 10
 # Создаем и активируем виртуальное окружение .my_venv
 # 
-echo -e "Шаг 10. Создаем и активируем виртуальное окружение .my_venv? (y/n)"
+echo -e "Шаг 10. Создаем и активируем виртуальное окружение .myvenv? (y/n)"
 read
 
 while [[ ! " ${array_y_n[@]} " =~ " $REPLY " ]]
@@ -176,8 +176,8 @@ while [[ ! " ${array_y_n[@]} " =~ " $REPLY " ]]
 
 if [[ "$REPLY" == "y" || "$REPLY" == "" ]]
   then
-    python3 -m venv .my_venv
-    source .my_venv/bin/activate
+    python3 -m venv .myvenv
+    source .myvenv/bin/activate
 fi
 
 
