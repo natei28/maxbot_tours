@@ -3,6 +3,8 @@
 
 ## Запуск проекта
 
+### Устанавливаем Git и клонируем проект с GitHub
+
 1. Обновляем пакеты
 ```
 apt update
@@ -12,4 +14,8 @@ apt upgrade
 ```
 apt install git
 ssh-keygen -t rsa
+```
+3. Клонируем проект с Github
+```
+git clone git@github.com:natei28/maxbot_tours.git
 ```
