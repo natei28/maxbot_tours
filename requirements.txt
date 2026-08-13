@@ -10,6 +10,7 @@ environs==14.1.1
 frozenlist==1.6.0
 idna==3.10
 magic-filter==1.0.12
+maxapi[fastapi]==1.2.0
 marshmallow==4.0.0
 multidict==6.4.3
 propcache==0.3.1
