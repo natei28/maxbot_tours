@@ -1,8 +1,6 @@
-import asyncio
+import asyncio ##
 import logging
 
-import uvicorn
-from fastapi import FastAPI
 
 from maxapi import Bot, Dispatcher, Router, F
 from maxapi.types import MessageCreated
@@ -28,10 +26,10 @@ from maxapi.types import MessageCallback, Message
 #from app.bot.handlers.user import user_router
 from app.bot.i18n.translator import get_translations
 from app.bot.middlewares.global_data import GlobalDataMiddleware
-#from app.bot.middlewares.database import DataBaseMiddleware
+from app.bot.middlewares.database import DataBaseMiddleware
 #from app.bot.middlewares.i18n import TranslatorMiddleware
 #from app.bot.middlewares.lang_settings import LangSettingsMiddleware
-#from app.bot.middlewares.shadow_ban import ShadowBanMiddleware
+from app.bot.middlewares.shadow_ban import ShadowBanMiddleware
 #from app.bot.middlewares.statistics import ActivityCounterMiddleware
 
 
@@ -181,8 +179,8 @@ async def main(config: Config) -> None:
     logger.info("Including middlewares...")
 #    dp.register_inner_middleware(GlobalDataMiddleware(db_pool, transltions, locales))
     dp.register_inner_middleware(GlobalDataMiddleware(db_pool, translations, locales))
-#    dp.update.middleware(DataBaseMiddleware())
-#    dp.update.middleware(ShadowBanMiddleware())
+    dp.register_inner_middleware(DataBaseMiddleware())
+    dp.register_inner_middleware(ShadowBanMiddleware())
 #    dp.update.middleware(ActivityCounterMiddleware())
 #    dp.update.middleware(LangSettingsMiddleware())
 #    dp.update.middleware(TranslatorMiddleware())

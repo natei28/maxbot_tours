@@ -19,9 +19,10 @@ class GlobalDataMiddleware(BaseMiddleware):
         data["db_pool"] = self.db_pool
         data["translations"] = self.translations
         data["locales"] = self.locales
-        var_1 = data.get("locales")
-        var_2 = data.get("db_pool")
-        print(var_1)
-        print(var_2)
+        data["user"] = event.from_user
+        #var_1 = data.get("locales")
+        #var_2 = data.get("db_pool")
+        #print(var_1)
+        print(f"Прошли мидл globaldata")
         return await handler(event, data)
 

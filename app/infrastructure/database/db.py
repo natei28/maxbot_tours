@@ -191,8 +191,8 @@ async def get_user_banned_status_by_id(
                FROM users 
                WHERE user_id = %s;""",
             params=(user_id,),
-      )
-      row = await data.fetchone()
+    )
+    row = await data.fetchone()
   if row:
     logger.info("The user with `user_id`=%s has the banned status is %s", user_id, row[0])
   else:
