@@ -20,10 +20,13 @@ class ShadowBanMiddleware(BaseMiddleware):
     event: UpdateUnion,
     data: dict[str, Any],
   ) -> Any:
+  
+    logger.info("[MIDDLEWARE START] %s", self.__class__.__name__)
+    
     user: User = data.get("user")
     #user: User = event.from_user
-    print("вошли в мидлварь shadowban")
-    print(user)
+    #print("вошли в мидлварь shadowban")
+    #print(user)
     #print(event)
     
     
@@ -42,5 +45,7 @@ class ShadowBanMiddleware(BaseMiddleware):
       if event.callback:
         await event.message.answer()
       return 
-
+    
+    logger.info("[MIDDLEWARE END] %s", self.__class__.__name__)
+    
     return await handler(event, data)

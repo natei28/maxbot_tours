@@ -20,18 +20,19 @@ from maxapi.types import MessageCallback, Message
 
 
 
-#from app.bot.handlers.admin import admin_router
+from app.bot.handlers.admin import admin_router
 #from app.bot.handlers.others import others_router
-#from app.bot.handlers.settings import settings_router
-#from app.bot.handlers.user import user_router
+from app.bot.handlers.settings import settings_router
+from app.bot.handlers.user import user_router
 from app.bot.i18n.translator import get_translations
 from app.bot.middlewares.global_data import GlobalDataMiddleware
 from app.bot.middlewares.database import DataBaseMiddleware
-#from app.bot.middlewares.i18n import TranslatorMiddleware
-#from app.bot.middlewares.lang_settings import LangSettingsMiddleware
+from app.bot.middlewares.i18n import TranslatorMiddleware
+from app.bot.middlewares.lang_settings import LangSettingsMiddleware
 from app.bot.middlewares.shadow_ban import ShadowBanMiddleware
-#from app.bot.middlewares.statistics import ActivityCounterMiddleware
+from app.bot.middlewares.statistics import ActivityCounterMiddleware
 
+from app.bot.middlewares.outher import DataInjectionMiddleware
 
 from app.infrastructure.database.connection import get_pg_pool
 from config.config import Config, load_config
@@ -63,9 +64,9 @@ from services.services import set_main_menu
 logging.basicConfig(level=logging.INFO)
 
 
-class FSM_Form(StatesGroup):
-  name = State()
-  age = State()
+#class FSM_Form(StatesGroup):
+#  name = State()
+#  age = State()
 
 
 
@@ -159,14 +160,19 @@ async def main(config: Config) -> None:
     # формируем список локалей из ключей словаря с переводами
     locales = list(translations.keys())
     
+    admin_ids=config.max_bot.admin_ids
     
     
     
+    @dp.message_callback(F.callback.payload == "data")
+    async def handle_specific_callback(event: MessageCallback):
+        await event.message.answer("Это кнопка с payload='data'!")
     
-    @dp.message_created()
-    async def handle_message(event: MessageCreated):
-        await event.message.answer('Бот работает через вебхуки!')
-        await event.message.answer(text="Клавиатура",attachments=[payload],)
+    
+    #@dp.message_created()
+    #async def handle_message(event: MessageCreated):
+    #    await event.message.answer('Бот работает через вебхуки!')
+    #    await event.message.answer(text="Клавиатура",attachments=[payload],)
         
     
     
@@ -174,16 +180,17 @@ async def main(config: Config) -> None:
     # Подключаем роутеры в нужном порядке
 #    logger.info("Including routers...")
 #    dp.include_routers(settings_router, admin_router, user_router, others_router)
-
+    dp.include_routers(settings_router, admin_router, user_router)
     # Подключаем миддлвари в нужном порядке
     logger.info("Including middlewares...")
 #    dp.register_inner_middleware(GlobalDataMiddleware(db_pool, transltions, locales))
-    dp.register_inner_middleware(GlobalDataMiddleware(db_pool, translations, locales))
-    dp.register_inner_middleware(DataBaseMiddleware())
-    dp.register_inner_middleware(ShadowBanMiddleware())
-#    dp.update.middleware(ActivityCounterMiddleware())
-#    dp.update.middleware(LangSettingsMiddleware())
-#    dp.update.middleware(TranslatorMiddleware())
+    dp.register_outer_middleware(GlobalDataMiddleware(db_pool, translations, locales, admin_ids))
+    dp.register_outer_middleware(DataBaseMiddleware())
+    dp.register_outer_middleware(ShadowBanMiddleware())
+    dp.register_outer_middleware(ActivityCounterMiddleware())
+    dp.register_outer_middleware(LangSettingsMiddleware())
+    dp.register_outer_middleware(TranslatorMiddleware())
+#    dp.register_outer_middleware(DataInjectionMiddleware())
     
     
     

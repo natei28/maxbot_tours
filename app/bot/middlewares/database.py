@@ -16,6 +16,9 @@ class DataBaseMiddleware(BaseMiddleware):
     event: UpdateUnion,
     data: dict[str, Any],
   ) -> Any:
+  
+    logger.info("[MIDDLEWARE START] %s", self.__class__.__name__)
+  
     db_pool: AsyncConnectionPool = data.get("db_pool")
 
     if db_pool is None:
@@ -32,7 +35,9 @@ class DataBaseMiddleware(BaseMiddleware):
         raise
     
     var_3 = data["conn"]
-    print(f"Прошел, мидл датабэйс, data['con']= {var_3}"    )    
+    #print(f"Прошел, мидл датабэйс, data['con']= {var_3}"    )    
     # Здесь может быть какой-то код, который выполнится в случае успешного завершения транзакции        
-
+    
+    logger.info("[MIDDLEWARE END] %s", self.__class__.__name__)
+    
     return result
