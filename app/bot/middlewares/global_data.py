@@ -1,0 +1,32 @@
+
+###     Эта мидлварь для того чтоб передать в data (workflowdata) обьекты locales, translations,   ###
+###     db_pool, для использования в следующих мидлварях.                                          ###
+
+import logging
+from typing import Any, Awaitable, Callable
+from maxapi.filters.middleware import BaseMiddleware
+from psycopg_pool import AsyncConnectionPool
+
+logger = logging.getLogger(__name__)
+
+class GlobalDataMiddleware(BaseMiddleware):
+    def __init__(self, db_pool, translations, locales, admin_ids):
+        self.db_pool = db_pool
+        self.translations = translations
+        self.locales = locales
+        self.admin_ids = admin_ids
+        
+    async def __call__(self, handler, event, data):
+        logger.info("[MIDDLEWARE START] %s", self.__class__.__name__)
+        data["db_pool"] = self.db_pool
+        data["translations"] = self.translations
+        data["locales"] = self.locales
+        data["admin_ids"] = self.admin_ids
+        data["user"] = event.from_user
+        #var_1 = data.get("locales")
+        #var_2 = data.get("db_pool")
+        #print(var_1)
+        #print(f"Прошли мидл globaldata")
+        logger.info("[MIDDLEWARE END] %s", self.__class__.__name__)        
+        return await handler(event, data)
+

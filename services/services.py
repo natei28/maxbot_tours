@@ -1,4 +1,5 @@
 import asyncio
+import random
 import logging
 from maxapi import Bot
 from maxapi.types import BotCommand
@@ -13,3 +14,8 @@ async def set_main_menu(bot: Bot):
     BotCommand(name="settings", description="Настройки"),
     BotCommand(name="support", description="Техподдержка"),
   )
+  
+async def msg_delay(event):
+    chat_id = event.chat.chat_id
+    await event.bot.send_action(chat_id=chat_id)
+    await asyncio.sleep(2)
