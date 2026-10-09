@@ -78,7 +78,7 @@ async def process_get_name(
 ### Шаг 3. Попадаем при вводе юзером "возраста".
 ### Выдаем клавиатуру, также предлагаем ввод
 
-# Хэндлер будет срабатывать на ввод в состоянии Ankets.fio
+# Хэндлер будет срабатывать на ввод в состоянии Ankets.age
 @user_anket_router.message_created(AnketsSG.age)
 async def process_get_age(
     event: MessageCreated,
@@ -101,7 +101,7 @@ async def process_get_age(
         event, context, 
         selected_name = 'dep_city_selected')
 	
-    kb = multi_select_3(
+    kb = multi_select(
         i18n["main_city"],
         dep_city_selected)
     
@@ -115,37 +115,21 @@ async def process_get_age(
 		
 ### Шаг 4. Попадаем при нажатии юзером города, либо ручном вводе города
 
-# Этот хэндлер обработывет нажатие кнопок в состоянии AnketsSG.dep_city
-@user_anket_router.message_callback(AnketsSG.dep_city)
+# 4.1 Этот хэндлер обработывет нажатие кнопок в состоянии AnketsSG.dep_city
+@user_anket_router.message_callback(AnketsSG.dep_city, ~F.callback.payload.in_(["cancel_select", "save_select"]))
 async def get_dep_city_process(
     event: MessageCallback,
     i18n: dict[str, str],
     context: MemoryContext
 ):
+
+    dep_city_selected = await select_fun(
+        event, context, 
+        selected_name = 'dep_city_selected')
     
-    #data = await context.get_data()
-    '''
-    dep_city_selected = data.get('dep_city_selected')
-    
-    if not dep_city_selected:
-        dep_city_selected = []
-        await context.update_data(dep_city_selected = dep_city_selected)
-    
-    payload = event.callback.payload
-    if payload in dep_city_selected:
-        index_payload = dep_city_selected.index(payload)
-        dep_city_selected.pop(index_payload)
-    else:
-        dep_city_selected.append(payload)
-    
-    await context.update_data(dep_city_selected = dep_city_selected)
-    
-    '''
-    
-    dep_city_selected = await select_fun(event, context, selected_name = 'dep_city_selected')
     data = await context.get_data()
     
-    kd = multi_select_3(
+    kd = multi_select(
         i18n["main_city"], 
         dep_city_selected)
     
@@ -154,12 +138,256 @@ async def get_dep_city_process(
         if msg_id:
             await event.bot.edit_message(
                 message_id=msg_id, 
-                text=i18n.get("выбирете один или несколько, либо отправте текстом"),
-                attachments=[kd]
-            )
+                text = i18n["get_dep_city"],
+                attachments=[kd])
     except MaxApiError:
         await callback.answer()
-		
+
+# 4.2 Этот хэндлер обработывет нажатие кнопок в состоянии AnketsSG.dep_city
+# Обработка кнопки Отмена
+@user_anket_router.message_callback(AnketsSG.dep_city, F.callback.payload == "cancel_select")
+async def get_dep_city_cancel(
+    event: MessageCallback,
+    i18n: dict[str, str],
+    context: MemoryContext
+):
+    print("!!!!!!")
+    await context.update_data(dep_city_selected = [])    
+    data = await context.get_data()
+    dep_city_selected = data.get("dep_city_selected")   
+    
+    kd = multi_select(
+        i18n["main_city"], 
+        dep_city_selected)
+        
+    try:
+        msg_id = data.get("dep_city_msg_id")
+        if msg_id:
+            await event.bot.edit_message(
+                message_id=msg_id, 
+                text = i18n["get_dep_city"],
+                attachments=[kd])
+    except MaxApiError:
+        await callback.answer()
+
+# 4.3 Этот хэндлер обработывет нажатие кнопок в состоянии AnketsSG.dep_city
+# Обработка кнопки Save
+@user_anket_router.message_callback(AnketsSG.dep_city, F.callback.payload == "save_select")
+async def get_dep_city_save(
+    event: MessageCallback,
+    i18n: dict[str, str],
+    context: MemoryContext
+):
+    data = await context.get_data()
+    dep_city_selected = data.get("dep_city_selected")
+
+    kd = multi_select(
+        i18n["main_city"], 
+        dep_city_selected)
+    
+    if not dep_city_selected:
+        try:
+            msg_id = data.get("dep_city_msg_id")
+            if msg_id:
+                await event.bot.edit_message(
+                    message_id=msg_id, 
+                    text = i18n["get_dep_city_1"],
+                    attachments=[kd])
+            return
+        except MaxApiError:
+            await callback.answer()
+
+    await msg_delay(event)
+    await event.message.answer(text=random.choice(i18n["good_task"]))
+    await msg_delay(event)
+
+    destn_selected = await select_fun(
+        event, context, 
+        selected_name = 'destn_selected')
+        
+    kb = multi_select(
+        i18n["destn_option"],
+        dep_city_selected,
+        size = 20)
+        
+    msg = await event.message.answer(
+        text = i18n["get_destn"],
+        attachments = [kb])             
+        
+    await context.update_data(destn_msg_id=msg.message.body.mid)
+    await context.set_state(AnketsSG.destn)
+            
+# 4.4 Этот хэндлер обработывет нажатие кнопок в состоянии AnketsSG.dep_city
+# Обработка ручного вода пользователем     
+@user_anket_router.message_created(AnketsSG.dep_city)
+async def get_dep_city_text(
+    event: MessageCreated,
+    context: MemoryContext,
+    i18n: dict[str, str]
+):
+    data = await context.get_data()
+    dep_city_selected = data.get("dep_city_selected", [])
+
+    if not isinstance(dep_city_selected, list):
+        dep_city_selected = []
+        
+    text = (event.message.body.text or "").strip()
+    if text:
+        dep_city_selected.append(text)
+        await context.update_data(dep_city_selected=dep_city_selected)
+
+    await msg_delay(event)
+    await event.message.answer(text=random.choice(i18n["good_task"]))
+    await msg_delay(event)
+
+    destn_selected = await select_fun(
+        event, context, 
+        selected_name = 'destn_selected')
+            
+    kb = multi_select(
+        i18n["destn_option"],
+        dep_city_selected,
+        size = 20)
+            
+    msg = await event.message.answer(
+        text = i18n["get_destn"],
+        attachments = [kb])             
+            
+    await context.update_data(destn_msg_id=msg.message.body.mid)
+    await context.set_state(AnketsSG.destn)
+
+### Шаг 5. Попадаем при нажатии юзером места прибытия, либо ручном вводе
+
+# 5.1 Этот хэндлер обработывет нажатие кнопок(выбор) в состоянии AnketsSG.destn
+@user_anket_router.message_callback(AnketsSG.destn, ~F.callback.payload.in_(["cancel_select", "save_select"]))
+async def get_destn_cb(
+    event: MessageCallback,
+    context: MemoryContext,
+    i18n: dict["str", "str"]
+):
+    destn_selected = await select_fun(
+        event, context,
+        selected_name = "destn_selected")
+        
+    kb = multi_select(
+        i18n["destn_option"],
+        destn_selected,
+        size = 20)
+    
+    data = await context.get_data()    
+    try:
+        msg_id = data.get("destn_msg_id")
+        if msg_id:
+            await event.bot.edit_message(
+                message_id=msg_id,
+                text=i18n["get_destn"],
+                attachments = [kb]
+            )
+    except MaxApiError:
+        await event.callback.answer()
+
+# 5.2 Этот хэндлер обработывет нажатие кнопоки Отмена в состоянии AnketsSG.destn
+@user_anket_router.message_callback(AnketsSG.destn, F.callback.payload == "cancel_select")
+async def get_destn_cncl(
+    event: MessageCallback,
+    context: MemoryContext,
+    i18n: dict["str", "str"]
+):
+    await context.update_data(destn_selected = [])
+    data = await context.get_data()
+    destn_selected = data.get("destn_selected")
+
+    kb = multi_select(
+        i18n["destn_option"],
+        destn_selected,
+        size = 20)
+
+    try:
+        msg_id = data.get("destn_msg_id")
+        if msg_id:
+            await event.bot.edit_message(
+                message_id=msg_id,
+                text=i18n["get_destn"],
+                attachments=[kb]
+            )
+    except MaxApiError:
+        await event.callback.answer()
+
+# 5.3 Этот хэндлер обработывет нажатие кнопоки Отмена в состоянии AnketsSG.destn   
+@user_anket_router.message_callback(AnketsSG.destn, F.callback.payload == "save_select")
+async def get_destn_save(
+    event: MessageCallback,
+    context: MemoryContext,
+    i18n: dict["str", "str"]
+):
+    data = await context.get_data()
+    destn_selected = data.get("destn_selected")
+
+    kb = multi_select(
+        i18n["destn_option"],
+        destn_selected,
+        size=20
+    )
+
+    if not destn_selected:
+        try:
+            msg_id = data.get("destn_msg_id")
+            if msg_id:
+                await event.bot.edit_message(
+                    message_id=msg_id,
+                    text=i18n["get_destn_1"],
+                    attachments=[kb])
+            return
+        except MaxApiError:
+            await callback.answer()
+            return
+
+    await msg_delay(event)
+    await event.message.answer(text=random.choice(i18n["good_task"]))
+    await msg_delay(event)
+    await event.message.answer(i18n["count_abult"])
+
+    await context.set_state(AnketsSG.abults)
+
+
+# 5.4 Этот хэндлер обработывет ручной ввод пользователем в состоянии AnketsSG.destn
+@user_anket_router.message_created(AnketsSG.destn)
+async def get_destn_msg(
+    event: MessageCreated,
+    context: MemoryContext,
+    i18n: dict["str", "str"]
+):
+
+    data = await context.get_data()
+    destn_selected = data.get("destn_selected", [])
+    print(f"ЧТО --->{destn_selected}<---")
+    
+    if not isinstance(destn_selected, list):
+        destn_selected = []
+    
+    text = (event.message.body.text or "").strip()
+    if text:
+        destn_selected.append(text)
+        await context.update_data(destn_selected=destn_selected)
+    
+    await msg_delay(event)
+    await event.message.answer(text=random.choice(i18n["good_task"]))
+    await msg_delay(event)
+    await event.message.answer(i18n["count_abult"])
+
+    data = await context.get_data()
+    print(data)
+    await context.set_state(AnketsSG.abults)
+
+
+'''
+    if F.callback.payload == "cancel_select":
+        await context.update_data(dep_city_selected = [])
+        
+    if F.callback.payload == "save_select":
+        await context.set_state(AnketsSG.destn)
+'''      
+
 		
 # Этот хэндлер будет обрабатывать ввод текста в состоянии AnkeysSG.dep_city
 @user_anket_router.message_created(AnketsSG.dep_city)

@@ -10,6 +10,8 @@ class AnketsSG(StatesGroup):
     age = State()
     dep_city = State()
     destn = State()
+    abults = State()
+
     travel_dates = State()
     abult_count = State()
     children_count = State()
